@@ -1,7 +1,7 @@
 {
-  "name": "next-app",
+  "name": "vrchat-osc-toys",
   "version": "0.1.0",
-  "private": true,
+  "repository": "https://github.com/UnusualNorm/VRChat-OSC-Toys.git",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
