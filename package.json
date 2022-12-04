@@ -1,0 +1,28 @@
+{
+  "name": "next-app",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "direct-styled": "^1.0.1",
+    "lodash": "^4.17.21",
+    "midi-player-js": "^2.0.16",
+    "next": "^13.0.6",
+    "node-osc": "^8.0.6",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "socket.io": "^4.5.4",
+    "socket.io-client": "^4.5.4"
+  },
+  "devDependencies": {
+    "@types/lodash": "^4.14.191",
+    "@types/node": "18.11.10",
+    "@types/node-osc": "^6.0.0",
+    "@types/react": "18.0.26",
+    "typescript": "4.9.3"
+  }
+}
