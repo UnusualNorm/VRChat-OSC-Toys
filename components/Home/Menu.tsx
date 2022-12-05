@@ -1,18 +1,17 @@
-import styles from '../../styles/Home/Menu.module.css';
-import HomeEntry from './Entry';
+import styles from "../../styles/Home/Menu.module.css";
 
 const toys = [
   {
-    name: 'MidiAtar',
+    name: "MidiAtar",
     image:
-      'https://api.vrchat.cloud/api/1/image/file_f2060e7f-44f1-49ce-bbbf-78c0307072c5/1/256',
-    link: '/MidiAtar',
+      "https://api.vrchat.cloud/api/1/image/file_f2060e7f-44f1-49ce-bbbf-78c0307072c5/1/256",
+    link: "/MidiAtar",
   },
   {
-    name: 'OuijAtar',
+    name: "OuijAtar",
     image:
-      'https://api.vrchat.cloud/api/1/image/file_3eda0fd7-88a0-4ffb-bd99-b73148c0e482/1/256',
-    link: '/ouijatar',
+      "https://api.vrchat.cloud/api/1/image/file_3eda0fd7-88a0-4ffb-bd99-b73148c0e482/1/256",
+    link: "/ouijatar",
   },
 ];
 
@@ -22,6 +21,7 @@ const ColumnEntries = (col: number) => {
     <div
       className={`${styles.container} ${styles.avatar} ${styles.zoom}`}
       onClick={() => (location.href = entry.link)}
+      key={entry.link}
     >
       <img src={entry.image} className={styles.image} />
       <div className={styles.overlay}>{entry.name}</div>

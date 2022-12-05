@@ -1,20 +1,20 @@
-import { useEffect, useRef, useState } from 'react';
-import { Socket } from 'socket.io-client';
-import styles from '../../styles/MidiAtar/Key.module.css';
+import { useEffect, useRef } from "react";
+import { Socket } from "socket.io-client";
+import styles from "../../styles/MidiAtar/Key.module.css";
 
 export interface MidiAtarKeyProps {
   note: number;
   pressed: boolean;
-  startNote: (note: number) => void;
-  stopNote: (note: number) => void;
+  onPressed: () => void;
+  onReleased: () => void;
 }
 
 let primaryMouseButtonDown = false;
 const MidiAtarKey = ({
   note,
   pressed,
-  startNote,
-  stopNote,
+  onPressed,
+  onReleased,
 }: MidiAtarKeyProps) => {
   const ref = useRef<HTMLLIElement>();
 
@@ -25,45 +25,45 @@ const MidiAtarKey = ({
 
   const mouseEnter = () => {
     if (!primaryMouseButtonDown) return;
-    console.log('Note on:', note);
-    startNote(note);
+    console.log("Note on:", note);
+    onPressed();
   };
 
   const mouseDown = () => {
-    console.log('Note on:', note);
-    startNote(note);
+    console.log("Note on:", note);
+    onPressed();
   };
 
   const mouseLeave = () => {
     if (!primaryMouseButtonDown) return;
-    console.log('Note off:', note);
-    stopNote(note);
+    console.log("Note off:", note);
+    onReleased();
   };
 
   const mouseUp = () => {
-    console.log('Note off:', note);
-    stopNote(note);
+    console.log("Note off:", note);
+    onReleased();
   };
 
   useEffect(() => {
-    document.addEventListener('mousedown', setPrimaryButtonState);
-    document.addEventListener('mousemove', setPrimaryButtonState);
-    document.addEventListener('mouseup', setPrimaryButtonState);
+    document.addEventListener("mousedown", setPrimaryButtonState);
+    document.addEventListener("mousemove", setPrimaryButtonState);
+    document.addEventListener("mouseup", setPrimaryButtonState);
 
-    ref.current.addEventListener('mouseenter', mouseEnter);
-    ref.current.addEventListener('mousedown', mouseDown);
-    ref.current.addEventListener('mouseleave', mouseLeave);
-    ref.current.addEventListener('mouseup', mouseUp);
+    ref.current.addEventListener("mouseenter", mouseEnter);
+    ref.current.addEventListener("mousedown", mouseDown);
+    ref.current.addEventListener("mouseleave", mouseLeave);
+    ref.current.addEventListener("mouseup", mouseUp);
 
     return () => {
-      document.removeEventListener('mousedown', setPrimaryButtonState);
-      document.removeEventListener('mousemove', setPrimaryButtonState);
-      document.removeEventListener('mouseup', setPrimaryButtonState);
+      document.removeEventListener("mousedown", setPrimaryButtonState);
+      document.removeEventListener("mousemove", setPrimaryButtonState);
+      document.removeEventListener("mouseup", setPrimaryButtonState);
 
-      ref.current.removeEventListener('mouseenter', mouseEnter);
-      ref.current.removeEventListener('mousedown', mouseDown);
-      ref.current.removeEventListener('mouseleave', mouseLeave);
-      ref.current.removeEventListener('mouseup', mouseUp);
+      ref.current.removeEventListener("mouseenter", mouseEnter);
+      ref.current.removeEventListener("mousedown", mouseDown);
+      ref.current.removeEventListener("mouseleave", mouseLeave);
+      ref.current.removeEventListener("mouseup", mouseUp);
     };
   }, []);
 
@@ -93,8 +93,8 @@ const MidiAtarKey = ({
     <li
       ref={ref}
       className={`${styles.key} ${accidental ? styles.black : styles.white} ${
-        agfdc ? styles.agfdc : ''
-      } ${pressed ? styles.active : ''} ${styles.selector}`}
+        agfdc ? styles.agfdc : ""
+      } ${pressed ? styles.active : ""} ${styles.selector}`}
     />
   );
 };

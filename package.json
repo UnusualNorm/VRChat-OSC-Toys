@@ -8,7 +8,6 @@
     "start": "next start"
   },
   "dependencies": {
-    "direct-styled": "^1.0.1",
     "lodash": "^4.17.21",
     "midi-player-js": "^2.0.16",
     "next": "^13.0.6",
