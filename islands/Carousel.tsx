@@ -5,16 +5,12 @@ import { useEffect, useRef } from "preact/hooks";
 import IconCircleChevronsRight from "tabler_icons_tsx/circle-chevrons-right.tsx";
 import IconCircleChevronsLeft from "tabler_icons_tsx/circle-chevrons-left.tsx";
 
-import avatars from "../avatars.json" assert { type: "json" };
-
-const SLIDE_DATA: SlideProps["data"] = avatars.map((avatar) => {
-  return {
-    color: "bg-green-300",
-    title: avatar.name,
-    description: avatar.description,
-    image: asset(avatar.avatar),
-  };
-});
+const SLIDE_DATA: SlideProps["data"][] = [{
+  color: "bg-red-500",
+  title: "Slide 1",
+  description: "This is the first slide",
+  image: asset("images/avatars/midiatar.png"),
+}];
 
 type SlideProps = {
   class?: string;
