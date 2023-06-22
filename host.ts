@@ -180,3 +180,10 @@ socket.on("midiAtarKey", (key, pressed, blame) => {
   );
   midiAtarResendNotes();
 });
+
+socket.on("midiAtarClear", (blame) => {
+  if (!blame) return;
+  midiAtarUserNotes.set(blame, []);
+  console.log((blame ? `${blame}: ` : "") + `midiAtar cleared`);
+  midiAtarResendNotes();
+});
