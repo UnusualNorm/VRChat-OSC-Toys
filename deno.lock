@@ -297,6 +297,7 @@
     "https://esm.sh/*@preact/signals-core@1.2.3": "ffb74fa726d528d50fb095cd54568be209ce264edfaa97e74c24af3d1b4523f5",
     "https://esm.sh/*@preact/signals@1.1.3": "792dc3146c1393e747fb34feb27955d916c68838c1751a7d6eddd07dd48d0cdc",
     "https://esm.sh/*preact-render-to-string@6.1.0": "9499dc7f262a542ed272bba52733bb6aa3365fbf2b2733b0d7ecd6da102fa290",
+    "https://esm.sh/midi-player-js@2.0.16?target=es2020": "2dc0ee89b172f6b80f3f3bef6104e8bb8c55f293a01f1a7576ed31d8e0b94f25",
     "https://esm.sh/preact@10.15.1": "2b79349676a4942fbcf835c4efa909791c2f0aeca195225bf22bac9866e94b4e",
     "https://esm.sh/preact@10.15.1/compat": "07273e22b1c335b8acc9f33c5e78165319c59bd8e2d0f3e5a2b4e028329424d9",
     "https://esm.sh/preact@10.15.1/debug": "7d1c92309880a87bfb95be85705d984401b27808db31adbd008ee4bed2553c1a",
@@ -328,6 +329,7 @@
     "https://esm.sh/v126/engine.io-parser@5.0.6/es2020/build/esm/encodePacket.browser.js": "d27652af294c3f1e9aba1544367b25f13d8924e20df6631c4272abc60fae3b2a",
     "https://esm.sh/v126/engine.io-parser@5.0.6/es2020/engine.io-parser.mjs": "9c152d0139671f937f4c9fb975fee5b9159687723397fd6a656117669da29208",
     "https://esm.sh/v126/ieee754@1.2.1/es2020/ieee754.mjs": "b9c2f136ab926832a61def47985d918ca7b97e20298410ff71172735345638ab",
+    "https://esm.sh/v126/midi-player-js@2.0.16/es2020/midi-player-js.mjs": "075d127e0ce5006349867ff63bdf1b1ae19c8cff260de99331be2f01cb86f578",
     "https://esm.sh/v126/preact-render-to-string@6.1.0/X-ZS8q/denonext/preact-render-to-string.mjs": "8ce71d44f2a197f8fafa24c8d1ac19e0d7fac5a171efae6154f8d754e1ae0ae4",
     "https://esm.sh/v126/socket.io-client@4.6.2/denonext/socket.io-client.mjs": "3c80545b1450696d7fa4c5e3b5a9e9a7bd7ea027b59256990c3c8717ddecd9f1",
     "https://esm.sh/v126/socket.io-client@4.6.2/es2020/socket.io-client.mjs": "6be7a9952e50ac2373b9e4393c385ea847301ec4d55b4c83391249e1eb5dcd2d",
@@ -337,5 +339,16 @@
     "https://esm.sh/v126/twind@0.16.19/denonext/sheets.js": "efd516ad31769dc75c995bfb984ab03d23c0e0a90240c83a5496ef150cfd4757",
     "https://esm.sh/v126/twind@0.16.19/denonext/twind.mjs": "6ee3c0c14b6740064f7dcd6aae4d40be42bf95adaf38f3b1cda09302c6d163b7",
     "https://unpkg.com/socket.io-client@4.6.2/build/cjs/index.js": "5d3096f2fc4ef316205e6a62879145c64ea593d5ed0fa36456226483285799e8"
+  },
+  "npm": {
+    "specifiers": {
+      "@types/node": "@types/node@18.11.18"
+    },
+    "packages": {
+      "@types/node@18.11.18": {
+        "integrity": "sha512-DHQpWGjyQKSHj3ebjFI/wRKcqQcdR+MoFBygntYOZytCqNfkd2ZC4ARDJ2DQqhjH5p85Nnd3jhUJIXrszFX/JA==",
+        "dependencies": {}
+      }
+    }
   }
 }

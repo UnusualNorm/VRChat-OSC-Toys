@@ -22,6 +22,7 @@
     "tabler_icons_tsx/": "https://deno.land/x/tabler_icons_tsx@0.0.3/tsx/",
     "socket_io/": "https://deno.land/x/socket_io@0.2.0/",
     "socket.io-client": "https://esm.sh/socket.io-client@4.6.2",
-    "osc": "https://deno.land/x/osc@v0.1.0/mod.ts"
+    "osc": "https://deno.land/x/osc@v0.1.0/mod.ts",
+    "midi-player-js": "https://esm.sh/midi-player-js@2.0.16?target=es2020"
   }
 }
