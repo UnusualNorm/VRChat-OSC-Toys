@@ -125,3 +125,58 @@ socket.on("signAtarI", (dial, value, blame) => {
 socket.on("signAtarIDR", (cb) => {
   cb(signAtarChannels);
 });
+
+const midiAtarBaseNote = 84;
+const midiAtarCalculateNoteVal = (note: number) =>
+  Math.pow(2, (note - midiAtarBaseNote) / 12) / 3;
+const midiAtarNoteChannels = 8;
+const midiAtarUserNotes = new Map<string, [note: number, start: number][]>();
+const midiAtarMaxTime = 5000;
+
+let midiAtarCurrentNoteValues: number[] = [];
+
+const midiAtarResendNotes = () => {
+  const notes = Array.from(midiAtarUserNotes.values()).flat();
+  const now = Date.now();
+  const filteredNotes = notes.filter(([, start]) =>
+    now - start <= midiAtarMaxTime
+  );
+  const uniqueNotes = Array.from(new Set(filteredNotes.map(([note]) => note)));
+  const firstNotes = uniqueNotes.slice(0, midiAtarNoteChannels);
+  const noteValues = firstNotes.map(midiAtarCalculateNoteVal);
+
+  noteValues.forEach((note, i) => {
+    if (note === midiAtarCurrentNoteValues[i]) return;
+    const msg = new Message(`/avatar/parameters/note${i}`);
+    msg.append(note, MessageType.Float32);
+
+    conn.send(msg.marshal(), {
+      transport: "udp",
+      port: 9000,
+      hostname: config.hostname,
+    });
+  });
+
+  midiAtarCurrentNoteValues = noteValues;
+};
+
+socket.on("midiAtarKey", (key, pressed, blame) => {
+  // Please never send midiatar notes as server, pretty please
+  if (!blame) return;
+  if (!midiAtarUserNotes.has(blame)) midiAtarUserNotes.set(blame, []);
+
+  let notes = midiAtarUserNotes.get(blame)!;
+  if (pressed) {
+    notes.push([key, Date.now()]);
+  } else {
+    notes = notes.filter(([note]) => note !== key);
+  }
+
+  // dunno if this is needed
+  midiAtarUserNotes.set(blame, notes);
+  console.log(
+    (blame ? `${blame}: ` : "") +
+      `midiAtar ${key} ${pressed ? "pressed" : "released"}`,
+  );
+  midiAtarResendNotes();
+});

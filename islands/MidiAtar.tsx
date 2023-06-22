@@ -20,7 +20,7 @@ const parseCookies = (cookie: string) => {
 };
 
 interface MidiAtarProps {
-  noteRange: NoteRange;
+  noteRange?: NoteRange;
   renderNoteLabel?: (props: {
     isActive: boolean;
     isAccidental: boolean;
@@ -35,15 +35,6 @@ interface MidiAtarProps {
     midiNumber: number;
   }[];
 }
-
-/*
-<Piano
-            noteRange={{ first: 48, last: 72 }}
-            playNote={(midiNumber) => console.log("playNote", midiNumber)}
-            stopNote={(midiNumber) => console.log("stopNote", midiNumber)}
-            width={600}
-          />
-          */
 
 const MidiAtar = ({
   noteRange = { first: 48, last: 72 },
@@ -69,30 +60,55 @@ const MidiAtar = ({
     },
   });
 
-  useEffect(() => {
-  }, [socket]);
-
   // We don't need to grab an idr frame, as music notes don't last for very long
   const [activeNotes, setActiveNotes] = useState<number[]>([]);
+  const [useractiveNotes, setUserActiveNotes] = useState<number[]>([]);
+
+  useEffect(() => {
+    if (!socket) {
+      return;
+    }
+
+    socket.on("midiAtarKey", (key: number, pressed: boolean) => {
+      setActiveNotes((activeNotes) => {
+        if (pressed) {
+          // Don't append note to activeNotes if it's already present
+          if (activeNotes.includes(key)) {
+            return activeNotes;
+          }
+
+          return activeNotes.concat(key);
+        } else {
+          return activeNotes.filter((note) => key !== note);
+        }
+      });
+    });
+  }, [socket]);
 
   const handlePlayNoteInput = (midiNumber: number) =>
-    setActiveNotes((activeNotes) => {
+    setUserActiveNotes((useractiveNotes) => {
       // Don't append note to activeNotes if it's already present
-      if (activeNotes.includes(midiNumber)) {
-        return activeNotes;
+      if (useractiveNotes.includes(midiNumber)) {
+        return useractiveNotes;
+      } else {
+        socket?.emit("midiAtarKey", midiNumber, true);
       }
 
-      return activeNotes.concat(midiNumber);
+      return useractiveNotes.concat(midiNumber);
     });
 
   const handleStopNoteInput = (midiNumber: number) =>
-    setActiveNotes((activeNotes) =>
-      activeNotes.filter((note) => midiNumber !== note)
-    );
+    setUserActiveNotes((useractiveNotes) => {
+      if (useractiveNotes.includes(midiNumber)) {
+        socket?.emit("midiAtarKey", midiNumber, false);
+      }
+
+      return useractiveNotes.filter((note) => midiNumber !== note);
+    });
 
   return (
     <ControlledPiano
-      activeNotes={activeNotes}
+      activeNotes={activeNotes.concat(useractiveNotes)}
       onPlayNoteInput={handlePlayNoteInput}
       onStopNoteInput={handleStopNoteInput}
       noteRange={noteRange}

@@ -14,6 +14,9 @@ export interface EmitEvents {
 
   signAtarI: (dial: number, value: number, blame?: string) => void;
   signAtarIDR: (cb: (idr: number[]) => void) => void;
+
+  midiAtarKey: (key: number, pressed: boolean, blame?: string) => void;
+  midiAtarClear: (blame?: string) => void;
 }
 
 export interface ListenEvents {
