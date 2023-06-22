@@ -25,6 +25,7 @@ export async function handler(
     return resp;
   }
 
+  ctx.state.hostId = hostId;
   const resp = await ctx.next();
   return resp;
 }

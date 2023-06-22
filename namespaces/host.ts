@@ -1,21 +1,26 @@
-import type { Namespace, Server } from "socket_io";
-import type {
-  InterServerEvents as ClientInterServerEvents,
-  ServerToSocketEvents as ClientServerToSocketEvents,
-  SocketData as ClientSocketData,
-  SocketToServerEvents as ClientSocketToServerEvents,
-} from "./client.ts";
+import type { Namespace, Server, Socket } from "socket_io/mod.ts";
+import type { RemoteSocket } from "socket_io/packages/socket.io/lib/broadcast-operator.ts";
+import type { ClientNamespace } from "./client.ts";
+import type { Message } from "https://deno.land/x/osc@v0.1.0/mod.ts";
 
-export interface ServerToSocketEvents {
+export interface EmitEvents {
   clientConnected: (client: string, avatar: string) => void;
-  midiAtarKey: (key: number, pressed: boolean, client: string) => void;
+  clientDisconnected: (client: string) => void;
+  param: (
+    path: string,
+    values: (Parameters<Message["append"]>)[],
+    blame?: string,
+  ) => void;
+
+  signAtarI: (dial: number, value: number, blame?: string) => void;
+  signAtarIDR: (cb: (idr: number[]) => void) => void;
 }
 
-export interface SocketToServerEvents {
+export interface ListenEvents {
   banClient: (client: string) => void;
 }
 
-export interface InterServerEvents {
+export interface ServerSideEvents {
 }
 
 export interface SocketData {
@@ -23,22 +28,27 @@ export interface SocketData {
   bannedIps: string[];
 }
 
+export type HostRemoteSocket = RemoteSocket<EmitEvents, SocketData>;
+export type HostSocket = Socket<
+  ListenEvents,
+  EmitEvents,
+  ServerSideEvents,
+  SocketData
+>;
+
+export type HostNamespace = Namespace<
+  ListenEvents,
+  EmitEvents,
+  ServerSideEvents,
+  SocketData
+>;
+
 export default function hostHandle(
   io: Server,
 ) {
-  const Clients = io as Server<
-    ClientSocketToServerEvents,
-    ClientServerToSocketEvents,
-    ClientInterServerEvents,
-    ClientSocketData
-  >;
+  const Clients = io.of("/") as ClientNamespace;
 
-  const Hosts = io.of("/host") as Namespace<
-    SocketToServerEvents,
-    ServerToSocketEvents,
-    InterServerEvents,
-    SocketData
-  >;
+  const Hosts = io.of("/host") as HostNamespace;
 
   Hosts.on("connection", (socket) => {
     const disallowedAvatars =
@@ -61,8 +71,13 @@ export default function hostHandle(
       }
     });
 
-    socket.on("disconnect", () => {
+    socket.on("disconnect", async () => {
       console.log(`Host ${socket.id} disconnected...`);
+      const clients = await Clients.fetchSockets();
+      for (const client of clients) {
+        if (client.data.hostId !== socket.id) continue;
+        client.disconnect(true);
+      }
     });
   });
 }

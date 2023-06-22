@@ -1,14 +1,20 @@
 [
   {
     "name": "MidiAtar",
-    "avatar": "https://avatars.githubusercontent.com/u/10000000",
+    "image": "https://avatars.githubusercontent.com/u/10000000",
     "description": "Sit back and relax to your favorite MIDI tunes with the all new MidiAtar! You can play songs on the fly using your keyboard, mouse, or any MIDI device. You can also upload your own MIDI files to play, if you're feeling adventurous!",
     "id": "midiatar"
   },
   {
     "name": "OuijAtar",
-    "avatar": "https://avatars.githubusercontent.com/u/10000000",
+    "image": "https://avatars.githubusercontent.com/u/10000000",
     "description": "Stir up feelings of dread as the OuijAtar shows you your future!- Or maybe just the local 7-11 number... You can take control of the Ouiji board and answer brave souls' questions, or maybe just watch as the spirits take over and chaos ensues.",
     "id": "ouijatar"
+  },
+  {
+    "name": "SignAtar",
+    "image": "https://avatars.githubusercontent.com/u/10000000",
+    "description": "Protest against the VRChat overlords with this handy-dandy sign! It only comes with 8 letters though...",
+    "id": "signatar"
   }
 ]

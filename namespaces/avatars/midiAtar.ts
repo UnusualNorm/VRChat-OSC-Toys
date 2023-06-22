@@ -1,67 +1,66 @@
-import type { Socket } from "socket_io";
-import type { SocketData as ClientSocketData } from "../client.ts";
-import type {
-  ServerToSocketEvents as HostServerToSocketEvents,
-  SocketData as HostSocketData,
-} from "../host.ts";
-import { RemoteSocket } from "https://deno.land/x/socket_io@0.2.0/packages/socket.io/lib/broadcast-operator.ts";
+import type { ClientSocket } from "../client.ts";
+import type { HostRemoteSocket } from "../host.ts";
 
-export interface ServerToSocketEvents {
+export interface EmitEvents {
   midiAtarKey: (key: number, pressed: boolean, client: string) => void;
 }
 
-export interface SocketToServerEvents {
+export interface ListenEvents {
   midiAtarKey: (
     key: number,
     pressed: boolean,
-    // cb(success: true): void,
-    // cb(success: false, reason: "ownership" | "input"): void,
-    // TODO: Fix this type
-    cb?: (
-      success: boolean,
-      reason?: "ownership" | "input" | "duplicate",
-    ) => void,
+    cb?:
+      & ((success: true) => void)
+      & ((success: false, reason: "ownership" | "duplicate") => void),
   ) => void;
 }
 
-export interface InterServerEvents {}
+export interface ServerSideEvents {}
 
-export interface SocketData extends ClientSocketData {}
+export interface SocketData {}
 
-const midiAtarHosts = new Map<string, Map<number, string>>();
+const baseNote = 84;
+const calculateNoteVal = (note: number) =>
+  Math.pow(2, (note - baseNote) / 12) / 3;
+const noteChannels = 8;
+
+const midiAtarKeyboards = new Map<string, Map<number, string>>();
+const midiAtarChannels = new Map<string, (number | undefined)[]>();
 
 export default function midiAtarHandle(
-  socket: Socket<
-    SocketToServerEvents,
-    ServerToSocketEvents,
-    InterServerEvents,
-    SocketData
-  >,
-  host: RemoteSocket<HostServerToSocketEvents, HostSocketData>,
+  socket: ClientSocket,
+  host: HostRemoteSocket,
 ) {
-  if (!midiAtarHosts.has(socket.data.hostId!)) {
-    midiAtarHosts.set(socket.data.hostId!, new Map());
+  if (!midiAtarKeyboards.has(socket.data.hostId!)) {
+    midiAtarKeyboards.set(socket.data.hostId!, new Map());
   }
 
-  const keys = midiAtarHosts.get(socket.data.hostId!)!;
+  // FIXME: A note which failed to recieve ownership will not be replayed when ownership is freed.
+  const keys = midiAtarKeyboards.get(socket.data.hostId!)!;
   socket.on("midiAtarKey", (key, pressed, cb) => {
     if (
       typeof key !== "number" || typeof pressed !== "boolean" ||
       (typeof cb !== "function" && cb !== undefined)
     ) {
-      cb?.(false, "input");
       return;
     }
 
+    // If there is a keyOwner, that also means that the key is pressed
     const keyOwner = keys.get(key);
+    if (keyOwner && keyOwner !== socket.id) {
+      cb?.(false, "ownership");
+      return;
+    }
 
-    if (!keyOwner && !pressed) {
+    // If we are trying to press an already pressed key
+    if (keyOwner && pressed) {
       cb?.(false, "duplicate");
       return;
     }
 
-    if (keyOwner && keyOwner !== socket.id) {
-      cb?.(false, "ownership");
+    // If we are trying to release an already released key
+    if (!keyOwner && !pressed) {
+      cb?.(false, "duplicate");
       return;
     }
 
@@ -79,8 +78,8 @@ export default function midiAtarHandle(
   });
 
   socket.on("disconnect", () => {
-    for (const [key, value] of keys) {
-      if (value !== socket.id) continue;
+    for (const [key, owner] of keys) {
+      if (owner !== socket.id) continue;
       keys.delete(key);
       socket.to(`${socket.data.hostId}-midiatar`)
         .emit("midiAtarKey", key, false, socket.id);

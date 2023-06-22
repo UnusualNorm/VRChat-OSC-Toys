@@ -1,65 +1,80 @@
-import type { Namespace, Server, Socket } from "socket_io";
-import type {
-  InterServerEvents as HostInterServerEvents,
-  ServerToSocketEvents as HostServerToSocketEvents,
-  SocketData as HostSocketData,
-  SocketToServerEvents as HostSocketToServerEvents,
-} from "./host.ts";
+import type { Namespace, Server, Socket } from "socket_io/mod.ts";
+import type { RemoteSocket } from "socket_io/packages/socket.io/lib/broadcast-operator.ts";
+import type { HostNamespace, HostRemoteSocket } from "./host.ts";
 
-import midiAtarHandle from "./avatars/midiAtar.ts";
-import { RemoteSocket } from "https://deno.land/x/socket_io@0.2.0/packages/socket.io/lib/broadcast-operator.ts";
+import midiAtarHandle, {
+  type EmitEvents as MidiAtarEmitEvents,
+  type ListenEvents as MidiAtarListenEvents,
+  type ServerSideEvents as MidiAtarServerSideEvents,
+  type SocketData as MidiAtarSocketData,
+} from "./avatars/midiAtar.ts";
 
-export interface ServerToSocketEvents {
+import signAtarHandle, {
+  type EmitEvents as SignAtarEmitEvents,
+  type ListenEvents as SignAtarListenEvents,
+  type ServerSideEvents as SignAtarServerSideEvents,
+  type SocketData as SignAtarSocketData,
+} from "./avatars/signAtar.ts";
+
+export interface EmitEvents extends MidiAtarEmitEvents, SignAtarEmitEvents {
   banned: () => void;
+  avatarBanned: () => void;
 }
 
-export interface SocketToServerEvents {}
+export interface ListenEvents
+  extends MidiAtarListenEvents, SignAtarListenEvents {}
 
-export interface InterServerEvents {}
+export interface ServerSideEvents
+  extends MidiAtarServerSideEvents, SignAtarServerSideEvents {}
 
-export interface SocketData {
+export interface SocketData extends MidiAtarSocketData, SignAtarSocketData {
   hostId: string;
   avatar: string;
 }
 
-export default function hostHandle(
+export type ClientRemoteSocket = RemoteSocket<EmitEvents, SocketData>;
+export type ClientSocket = Socket<
+  ListenEvents,
+  EmitEvents,
+  ServerSideEvents,
+  SocketData
+>;
+
+export type ClientNamespace = Namespace<
+  ListenEvents,
+  EmitEvents,
+  ServerSideEvents,
+  SocketData
+>;
+
+export default function clientHandle(
   io: Server,
 ) {
-  const Clients = io as Server<
-    SocketToServerEvents,
-    ServerToSocketEvents,
-    InterServerEvents,
-    SocketData
-  >;
-
-  const Hosts = io.of("/host") as Namespace<
-    HostSocketToServerEvents,
-    HostServerToSocketEvents,
-    HostInterServerEvents,
-    HostSocketData
-  >;
+  const Clients = io.of("/") as ClientNamespace;
+  const Hosts = io.of("/host") as HostNamespace;
 
   Clients.on("connection", async (socket) => {
     const hostId = socket.handshake.query.get("hostId");
     const avatar = socket.handshake.query.get("avatar");
     if (!hostId || !avatar) {
-      socket.disconnect(true);
+      socket.disconnect();
       return;
     }
 
     const hosts = await Hosts.fetchSockets();
-    let host!: RemoteSocket<HostServerToSocketEvents, HostSocketData>;
+    let host!: HostRemoteSocket;
     for (const newHost of hosts) {
       if (newHost.id !== hostId) continue;
 
       if (newHost.data.bannedIps.includes(socket.handshake.address)) {
         socket.emit("banned");
-        socket.disconnect(true);
+        socket.disconnect();
         return;
       }
 
       if (newHost.data.disallowedAvatars.includes(avatar)) {
-        socket.disconnect(true);
+        socket.emit("avatarBanned");
+        socket.disconnect();
         return;
       }
 
@@ -70,7 +85,7 @@ export default function hostHandle(
     }
 
     if (!socket.data.hostId) {
-      socket.disconnect(true);
+      socket.disconnect();
       return;
     }
 
@@ -82,9 +97,14 @@ export default function hostHandle(
 
     switch (socket.data.avatar) {
       case "midiatar":
-        // TODO: Fix this type error
-        midiAtarHandle(socket as any, host);
+        midiAtarHandle(socket, host);
         break;
+      case "signatar":
+        signAtarHandle(socket, host);
+        break;
+      default:
+        socket.disconnect();
+        return;
     }
 
     console.log(

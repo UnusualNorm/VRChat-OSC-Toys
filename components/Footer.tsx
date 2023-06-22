@@ -7,6 +7,7 @@ export default function Footer() {
       title: "Pages",
       children: [
         { name: "Home", href: "/" },
+        { name: "Connect", href: "/connect" },
         { name: "Avatars", href: "/avatars" },
       ],
     },

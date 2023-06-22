@@ -2,35 +2,53 @@
 // This file SHOULD be checked into source version control.
 // This file is automatically updated during development when running `dev.ts`.
 
-import config from "./deno.json" assert { type: "json" };
 import * as $0 from "./routes/_app.tsx";
 import * as $1 from "./routes/avatars/_middleware.ts";
-import * as $2 from "./routes/avatars/midiatar.tsx";
-import * as $3 from "./routes/connect.tsx";
-import * as $4 from "./routes/index.tsx";
+import * as $2 from "./routes/avatars/index.tsx";
+import * as $3 from "./routes/avatars/midiatar.tsx";
+import * as $4 from "./routes/avatars/signatar.tsx";
+import * as $5 from "./routes/connect.tsx";
+import * as $6 from "./routes/index.tsx";
 import * as $$0 from "./islands/Button.tsx";
 import * as $$1 from "./islands/Carousel.tsx";
 import * as $$2 from "./islands/ColoredButton.tsx";
-import * as $$3 from "./islands/Header.tsx";
-import * as $$4 from "./islands/Input.tsx";
+import * as $$3 from "./islands/Dial/ControlledDial.tsx";
+import * as $$4 from "./islands/Dial/Dial.tsx";
+import * as $$5 from "./islands/Header.tsx";
+import * as $$6 from "./islands/Input.tsx";
+import * as $$7 from "./islands/MidiAtar.tsx";
+import * as $$8 from "./islands/Piano/ControlledPiano.tsx";
+import * as $$9 from "./islands/Piano/Key.tsx";
+import * as $$10 from "./islands/Piano/Keyboard.tsx";
+import * as $$11 from "./islands/Piano/Piano.tsx";
+import * as $$12 from "./islands/SignAtar.tsx";
 
 const manifest = {
   routes: {
     "./routes/_app.tsx": $0,
     "./routes/avatars/_middleware.ts": $1,
-    "./routes/avatars/midiatar.tsx": $2,
-    "./routes/connect.tsx": $3,
-    "./routes/index.tsx": $4,
+    "./routes/avatars/index.tsx": $2,
+    "./routes/avatars/midiatar.tsx": $3,
+    "./routes/avatars/signatar.tsx": $4,
+    "./routes/connect.tsx": $5,
+    "./routes/index.tsx": $6,
   },
   islands: {
     "./islands/Button.tsx": $$0,
     "./islands/Carousel.tsx": $$1,
     "./islands/ColoredButton.tsx": $$2,
-    "./islands/Header.tsx": $$3,
-    "./islands/Input.tsx": $$4,
+    "./islands/Dial/ControlledDial.tsx": $$3,
+    "./islands/Dial/Dial.tsx": $$4,
+    "./islands/Header.tsx": $$5,
+    "./islands/Input.tsx": $$6,
+    "./islands/MidiAtar.tsx": $$7,
+    "./islands/Piano/ControlledPiano.tsx": $$8,
+    "./islands/Piano/Key.tsx": $$9,
+    "./islands/Piano/Keyboard.tsx": $$10,
+    "./islands/Piano/Piano.tsx": $$11,
+    "./islands/SignAtar.tsx": $$12,
   },
   baseUrl: import.meta.url,
-  config,
 };
 
 export default manifest;
