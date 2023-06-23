@@ -128,7 +128,7 @@ socket.on("signAtarIDR", (cb) => {
 
 const midiAtarBaseNote = 64;
 const midiAtarCalculateNoteVal = (note: number) =>
-  Math.pow(2, (note - midiAtarBaseNote) / 12) / 2;
+  Math.pow(2, (note - midiAtarBaseNote) / 12) / 3;
 const midiAtarUserNotes = new Map<string, [note: number, start: number][]>();
 const midiAtarMaxTime = 5000;
 
