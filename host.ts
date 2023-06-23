@@ -147,7 +147,7 @@ const midiAtarResendNotes = () => {
 
   noteValues.forEach((note, i) => {
     if (note === midiAtarCurrentNoteValues[i]) return;
-    const msg = new Message(`/avatar/parameters/note${i}`);
+    const msg = new Message(`/avatar/parameters/channel${i}`);
     msg.append(note, MessageType.Float32);
 
     conn.send(msg.marshal(), {

@@ -3,6 +3,7 @@ import { IS_BROWSER } from "$fresh/runtime.ts";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { useSocket } from "../utils/socket.io.ts";
 import MidiPlayer from "midi-player-js";
+import { SplendidGrandPiano } from "https://esm.sh/smplr@0.6.1";
 
 import Input from "./Input.tsx";
 import Button from "./Button.tsx";
@@ -40,7 +41,7 @@ interface MidiAtarProps {
 }
 
 const MidiAtar = ({
-  noteRange = { first: 48, last: 72 },
+  noteRange = { first: 48, last: 71 },
   renderNoteLabel,
   className,
   disabled,
@@ -69,6 +70,9 @@ const MidiAtar = ({
   const [uploadingMidi, setUploadingMidi] = useState(false);
   const [playingMidi, setPlayingMidi] = useState(false);
   const playerRef = useRef<any>();
+  const [hearAudio, setHearAudio] = useState(false);
+  const contextRef = useRef<AudioContext | null>(null);
+  const pianoRef = useRef<SplendidGrandPiano | null>(null);
 
   useEffect(() => {
     if (!socket) {
@@ -83,23 +87,33 @@ const MidiAtar = ({
             return activeNotes;
           }
 
+          if (hearAudio) pianoRef.current?.start(key);
           return activeNotes.concat(key);
         } else {
+          if (!activeNotes.includes(key)) {
+            return activeNotes;
+          }
+
+          pianoRef.current?.stop(key);
           return activeNotes.filter((note) => key !== note);
         }
       });
     });
-  }, [socket]);
+
+    return () => {
+      socket.off("midiAtarKey");
+    };
+  }, [socket, hearAudio]);
 
   const handlePlayNoteInput = (midiNumber: number) =>
     setUserActiveNotes((useractiveNotes) => {
       // Don't append note to activeNotes if it's already present
       if (useractiveNotes.includes(midiNumber)) {
         return useractiveNotes;
-      } else {
-        socket?.emit("midiAtarKey", midiNumber, true);
       }
 
+      socket?.emit("midiAtarKey", midiNumber, true);
+      if (hearAudio) pianoRef.current?.start(midiNumber);
       return useractiveNotes.concat(midiNumber);
     });
 
@@ -107,6 +121,7 @@ const MidiAtar = ({
     setUserActiveNotes((useractiveNotes) => {
       if (useractiveNotes.includes(midiNumber)) {
         socket?.emit("midiAtarKey", midiNumber, false);
+        pianoRef.current?.stop(midiNumber);
       }
 
       return useractiveNotes.filter((note) => midiNumber !== note);
@@ -134,6 +149,9 @@ const MidiAtar = ({
         };
       }
     });
+
+    contextRef.current = new AudioContext();
+    pianoRef.current = new SplendidGrandPiano(contextRef.current);
   }, []);
 
   return (
@@ -183,6 +201,7 @@ const MidiAtar = ({
               playerRef.current?.stop();
               useractiveNotes.forEach((note) => {
                 socket?.emit("midiAtarKey", note, false);
+                pianoRef.current?.stop(note);
               });
               setUserActiveNotes([]);
             } else {
@@ -194,6 +213,15 @@ const MidiAtar = ({
         >
           {playingMidi ? "Stop" : "Play"}
         </Button>
+        <Input
+          type="checkbox"
+          checked={hearAudio}
+          onChange={(e) => {
+            // @ts-ignore checked is not correct in the typescript definition
+            setHearAudio(!!e.target?.checked);
+          }}
+        />
+        <p>Hear Audio</p>
       </div>
       <div class="flex flex-row items-center justify-center w-full">
         <ControlledPiano
