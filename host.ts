@@ -126,10 +126,9 @@ socket.on("signAtarIDR", (cb) => {
   cb(signAtarChannels);
 });
 
-const midiAtarBaseNote = 84;
+const midiAtarBaseNote = 64;
 const midiAtarCalculateNoteVal = (note: number) =>
-  Math.pow(2, (note - midiAtarBaseNote) / 12) / 3;
-const midiAtarNoteChannels = 8;
+  Math.pow(2, (note - midiAtarBaseNote) / 12) / 2;
 const midiAtarUserNotes = new Map<string, [note: number, start: number][]>();
 const midiAtarMaxTime = 5000;
 
@@ -142,8 +141,7 @@ const midiAtarResendNotes = () => {
     now - start <= midiAtarMaxTime
   );
   const uniqueNotes = Array.from(new Set(filteredNotes.map(([note]) => note)));
-  const firstNotes = uniqueNotes.slice(0, midiAtarNoteChannels);
-  const noteValues = firstNotes.map(midiAtarCalculateNoteVal);
+  const noteValues = uniqueNotes.map(midiAtarCalculateNoteVal);
 
   noteValues.forEach((note, i) => {
     if (note === midiAtarCurrentNoteValues[i]) return;

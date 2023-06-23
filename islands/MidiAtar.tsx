@@ -41,7 +41,7 @@ interface MidiAtarProps {
 }
 
 const MidiAtar = ({
-  noteRange = { first: 48, last: 71 },
+  noteRange = { first: 48, last: 72 },
   renderNoteLabel,
   className,
   disabled,
