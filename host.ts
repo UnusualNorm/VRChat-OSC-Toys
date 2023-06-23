@@ -6,8 +6,9 @@ interface HostConfig {
   midiAtar: {
     enabled: boolean;
     baseNote: number;
-    channels: number;
-    duplicateNotes: boolean;
+    maxMultiplier: number;
+    prefix: string;
+    base1: boolean;
   };
 }
 
@@ -17,8 +18,9 @@ let config: HostConfig = {
   midiAtar: {
     enabled: true,
     baseNote: 84,
-    channels: 8,
-    duplicateNotes: false,
+    maxMultiplier: 3,
+    prefix: "midiAtar",
+    base1: false,
   },
 };
 
@@ -126,9 +128,9 @@ socket.on("signAtarIDR", (cb) => {
   cb(signAtarChannels);
 });
 
-const midiAtarBaseNote = 64;
 const midiAtarCalculateNoteVal = (note: number) =>
-  Math.pow(2, (note - midiAtarBaseNote) / 12) / 3;
+  Math.pow(2, (note - config.midiAtar.baseNote) / 12) /
+  config.midiAtar.maxMultiplier;
 const midiAtarUserNotes = new Map<string, [note: number, start: number][]>();
 const midiAtarMaxTime = 5000;
 
@@ -145,7 +147,11 @@ const midiAtarResendNotes = () => {
 
   noteValues.forEach((note, i) => {
     if (note === midiAtarCurrentNoteValues[i]) return;
-    const msg = new Message(`/avatar/parameters/channel${i}`);
+    const msg = new Message(
+      `/avatar/parameters/${config.midiAtar.prefix}${
+        i + Number(config.midiAtar.base1)
+      }`,
+    );
     msg.append(note, MessageType.Float32);
 
     conn.send(msg.marshal(), {
@@ -157,7 +163,11 @@ const midiAtarResendNotes = () => {
 
   if (midiAtarCurrentNoteValues.length > noteValues.length) {
     for (let i = noteValues.length; i < midiAtarCurrentNoteValues.length; i++) {
-      const msg = new Message(`/avatar/parameters/channel${i}`);
+      const msg = new Message(
+        `/avatar/parameters/${config.midiAtar.prefix}${
+          i + Number(config.midiAtar.base1)
+        }`,
+      );
       // FIXME: wtf is this
       msg.append(0.0001, MessageType.Float32);
 
