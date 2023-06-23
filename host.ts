@@ -158,7 +158,8 @@ const midiAtarResendNotes = () => {
   if (midiAtarCurrentNoteValues.length > noteValues.length) {
     for (let i = noteValues.length; i < midiAtarCurrentNoteValues.length; i++) {
       const msg = new Message(`/avatar/parameters/channel${i}`);
-      msg.append(0, MessageType.Float32);
+      // FIXME: wtf is this
+      msg.append(0.0001, MessageType.Float32);
 
       conn.send(msg.marshal(), {
         transport: "udp",
