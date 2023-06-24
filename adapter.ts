@@ -7,6 +7,7 @@ import { Adapter, type Namespace } from "socket_io/mod.ts";
 export enum MessageType {
   Request = "request",
   Response = "response",
+  KeepAlive = "keepAlive",
 }
 
 export interface Request {
@@ -20,11 +21,19 @@ export interface Response {
   response: ClusterResponse;
 }
 
-export type Message = Request | Response;
+export interface KeepAlive {
+  type: MessageType.KeepAlive;
+  uid: string;
+}
 
+export type Message = Request | Response | KeepAlive;
+
+const KEEP_ALIVE_INTERVAL = 1000;
+const KEEP_ALIVE_FORGIVENESS = 500;
 export class BCAdapter extends Adapter {
   protected channel: BroadcastChannel;
 
+  protected otherServers = new Map<string, number>();
   constructor(nsp: Namespace) {
     super(nsp);
     this.channel = new BroadcastChannel(nsp.name);
@@ -41,8 +50,41 @@ export class BCAdapter extends Adapter {
           if (event.data.requesterUid !== this.uid) return;
           this.onResponse(event.data.response);
           break;
+
+        case MessageType.KeepAlive:
+          if (event.data.uid === this.uid) return;
+          this.otherServers.set(event.data.uid, Date.now());
       }
     };
+
+    this.publishKeepAlive();
+    setInterval(() => {
+      this.publishKeepAlive();
+      this.trimKeepAlive();
+    }, KEEP_ALIVE_INTERVAL);
+  }
+
+  // TODO: Make this actively fetch current servers instead of our cache
+  public serverCount(): Promise<number> {
+    this.trimKeepAlive();
+    return Promise.resolve(this.otherServers.size + 1);
+  }
+
+  protected publishKeepAlive(): void {
+    this.channel.postMessage({
+      type: MessageType.KeepAlive,
+      uid: this.uid,
+    } as KeepAlive);
+  }
+
+  protected trimKeepAlive(): void {
+    this.otherServers.forEach((lastSeen, uid) => {
+      if (
+        Date.now() - lastSeen > KEEP_ALIVE_INTERVAL + KEEP_ALIVE_FORGIVENESS
+      ) {
+        this.otherServers.delete(uid);
+      }
+    });
   }
 
   protected publishRequest(request: ClusterRequest): void {

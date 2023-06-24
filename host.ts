@@ -143,7 +143,9 @@ const midiAtarResendNotes = () => {
     now - start <= midiAtarMaxTime
   );
   const uniqueNotes = Array.from(new Set(filteredNotes.map(([note]) => note)));
-  const noteValues = uniqueNotes.map(midiAtarCalculateNoteVal);
+  const noteValues = uniqueNotes.sort(
+    (a, b) => b - a,
+  ).map(midiAtarCalculateNoteVal);
 
   noteValues.forEach((note, i) => {
     if (note === midiAtarCurrentNoteValues[i]) return;
