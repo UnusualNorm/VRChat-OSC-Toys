@@ -1,8 +1,10 @@
+import type { JSX } from "preact";
 import { IS_BROWSER } from "$fresh/runtime.ts";
 import { useEffect, useState } from "preact/hooks";
 import { useSocket } from "../utils/socket.io.ts";
 
 import ControlledDial from "./Dial/ControlledDial.tsx";
+import Input from "./Input.tsx";
 
 const parseCookies = (cookie: string) => {
   const out: Record<string, string> = {};
@@ -76,8 +78,32 @@ const SignAtar = ({
     }
   };
 
+  const applyInput = (
+    e: JSX.TargetedEvent<HTMLInputElement, Event>,
+  ) => {
+    const input = e.currentTarget.value.toUpperCase();
+    const newIndexes = Array(length).fill(0);
+
+    for (let i = 0; i < length; i++) {
+      const index = values.indexOf(input[i]);
+      if (index !== -1) {
+        newIndexes[i] = index;
+        socket?.emit("signAtarI", i, index);
+      } else {
+        newIndexes[i] = 0;
+        socket?.emit("signAtarI", i, 0);
+      }
+    }
+
+    // A wee bit dangerous, there's a chance the host refuses the change, and now we're desynced
+    if (predict) {
+      setIndexes(newIndexes);
+    }
+  };
+
   return (
     <div className="flex flex-row justify-center">
+      <Input placeholder="Text" onSubmit={applyInput} />
       {indexes.map((index, dialIndex) => (
         // TODO: Transition to ControlledDial
         <ControlledDial
