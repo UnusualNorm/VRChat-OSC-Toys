@@ -103,7 +103,11 @@ const SignAtar = ({
 
   return (
     <div className="flex flex-row justify-center">
-      <Input placeholder="Text" onSubmit={applyInput} />
+      <Input
+        placeholder="Text"
+        value={indexes.map((index) => values[index]).join("")}
+        onChange={applyInput}
+      />
       {indexes.map((index, dialIndex) => (
         // TODO: Transition to ControlledDial
         <ControlledDial
