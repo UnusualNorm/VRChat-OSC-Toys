@@ -105,7 +105,8 @@ const SignAtar = ({
     <div className="flex flex-row justify-center">
       <Input
         placeholder="Text"
-        value={indexes.map((index) => values[index]).join("")}
+        value={indexes.map((index) => values[index]).join("").trimEnd()
+          .toLowerCase()}
         onChange={applyInput}
       />
       {indexes.map((index, dialIndex) => (
