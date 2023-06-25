@@ -211,7 +211,7 @@ const MidiAtar = ({
       console.log("MIDI file ended!");
       stopMidi();
       if (loopMidiRef.current) {
-        startMidi();
+        setTimeout(() => startMidi(), 0);
       }
     });
 
