@@ -25,7 +25,8 @@ let config: HostConfig = {
 };
 
 type FullPartial<T> = {
-  [P in keyof T]?: T[P] extends Record<string, unknown> ? FullPartial<T[P]>
+  [P in keyof T]?: T[P] extends Record<string, unknown>
+    ? FullPartial<T[P]>
     : T[P];
 };
 
@@ -43,7 +44,7 @@ const applyFullPartial = <T>(obj: T, partial: FullPartial<T>): T => {
 try {
   console.log("Loading config.json...");
   const customConfig = JSON.parse(
-    Deno.readTextFileSync("./config.json"),
+    Deno.readTextFileSync("./config.json")
   ) as FullPartial<HostConfig>;
   config = applyFullPartial(config, customConfig);
   console.log("Loaded config.json!");
@@ -70,18 +71,15 @@ const socket = io(config.url, {
 
 console.log("Connecting to server...");
 socket.on("connect", () => console.log(`Connected to server! (${socket.id})`));
-socket.on(
-  "disconnect",
-  (reason) => console.log(`Disconnected from server... (${reason})`),
+socket.on("disconnect", (reason) =>
+  console.log(`Disconnected from server... (${reason})`)
 );
 
-socket.on(
-  "clientConnected",
-  (id, avatar) => console.log(`Client ${id} connected to ${avatar}!`),
+socket.on("clientConnected", (id, avatar) =>
+  console.log(`Client ${id} connected to ${avatar}!`)
 );
-socket.on(
-  "clientDisconnected",
-  (id) => console.log(`Client ${id} disconnected...`),
+socket.on("clientDisconnected", (id) =>
+  console.log(`Client ${id} disconnected...`)
 );
 
 socket.on("param", (path, values, blame) => {
@@ -111,11 +109,11 @@ socket.on("signAtarI", (dial, value, blame) => {
 
   const prog = value / (signAtarValues.length - 1);
   const msg = new Message(`/avatar/parameters/signAtar${dial}`);
-  msg.append(prog, MessageType.Float32);
+  msg.append(prog);
 
   console.log(
     (blame ? `${blame}: ` : "") +
-      `signAtar ${dial} ${value} ${signAtarValues[value]} ${prog}`,
+      `signAtar ${dial} ${value} ${signAtarValues[value]} ${prog}`
   );
   conn.send(msg.marshal(), {
     transport: "udp",
@@ -139,20 +137,20 @@ let midiAtarCurrentNoteValues: number[] = [];
 const midiAtarResendNotes = () => {
   const notes = Array.from(midiAtarUserNotes.values()).flat();
   const now = Date.now();
-  const filteredNotes = notes.filter(([, start]) =>
-    now - start <= midiAtarMaxTime
+  const filteredNotes = notes.filter(
+    ([, start]) => now - start <= midiAtarMaxTime
   );
   const uniqueNotes = Array.from(new Set(filteredNotes.map(([note]) => note)));
-  const noteValues = uniqueNotes.sort(
-    (a, b) => b - a,
-  ).map(midiAtarCalculateNoteVal);
+  const noteValues = uniqueNotes
+    .sort((a, b) => b - a)
+    .map(midiAtarCalculateNoteVal);
 
   noteValues.forEach((note, i) => {
     if (note === midiAtarCurrentNoteValues[i]) return;
     const msg = new Message(
       `/avatar/parameters/${config.midiAtar.prefix}${
         i + Number(config.midiAtar.base1)
-      }`,
+      }`
     );
     msg.append(note, MessageType.Float32);
 
@@ -168,7 +166,7 @@ const midiAtarResendNotes = () => {
       const msg = new Message(
         `/avatar/parameters/${config.midiAtar.prefix}${
           i + Number(config.midiAtar.base1)
-        }`,
+        }`
       );
       // FIXME: wtf is this
       msg.append(0.0001, MessageType.Float32);
@@ -200,7 +198,7 @@ socket.on("midiAtarKey", (key, pressed, blame) => {
   midiAtarUserNotes.set(blame, notes);
   console.log(
     (blame ? `${blame}: ` : "") +
-      `midiAtar ${key} ${pressed ? "pressed" : "released"}`,
+      `midiAtar ${key} ${pressed ? "pressed" : "released"}`
   );
   midiAtarResendNotes();
 });
