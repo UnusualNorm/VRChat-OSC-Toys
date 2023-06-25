@@ -3,7 +3,7 @@ import type {
   ListenEvents as EmitEvents,
 } from "../namespaces/client.ts";
 
-import { useEffect, useState } from "preact/hooks";
+import { useEffect, useRef } from "preact/hooks";
 import io, {
   type ManagerOptions,
   type Socket,
@@ -13,13 +13,13 @@ import io, {
 export function useSocket(
   opts?: Partial<ManagerOptions & SocketOptions> | undefined,
 ) {
-  const [socket, setSocket] = useState<Socket<ListenEvents, EmitEvents> | null>(
+  const socketRef = useRef<Socket<ListenEvents, EmitEvents> | null>(
     null,
   );
 
   useEffect(() => {
     const socket = io(opts);
-    setSocket(socket);
+    socketRef.current = socket;
     socket.on(
       "disconnect",
       (reason) => {
@@ -38,5 +38,5 @@ export function useSocket(
     };
   }, [JSON.stringify(opts)]);
 
-  return socket;
+  return socketRef;
 }

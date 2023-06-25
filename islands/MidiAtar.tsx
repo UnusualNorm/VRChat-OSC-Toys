@@ -66,7 +66,7 @@ const MidiAtar = ({
 
   // We don't need to grab an idr frame, as music notes don't last for very long
   const [activeNotes, setActiveNotes] = useState<number[]>([]);
-  const [useractiveNotes, setUserActiveNotes] = useState<number[]>([]);
+  const [userActiveNotes, setUserActiveNotes] = useState<number[]>([]);
   const [midiLoaded, setMidiLoaded] = useState(false);
   const [playingMidi, setPlayingMidi] = useState(false);
   const [hearAudio, setHearAudio] = useState(false);
@@ -98,11 +98,11 @@ const MidiAtar = ({
 
   useEffect(() => {
     console.log("Setting up socket...");
-    if (!socket) {
+    if (!socket.current) {
       return;
     }
 
-    socket.on("midiAtarKey", (key: number, pressed: boolean) => {
+    socket.current.on("midiAtarKey", (key: number, pressed: boolean) => {
       setActiveNotes((activeNotes) => {
         if (pressed) {
           // Don't append note to activeNotes if it's already present
@@ -125,24 +125,24 @@ const MidiAtar = ({
 
     return () => {
       console.log("Cleaning up socket...");
-      socket.off("midiAtarKey");
+      socket.current?.off("midiAtarKey");
     };
-  }, [socket]);
+  }, [socket.current]);
 
   const handlePlayNoteInput = (midiNumber: number) => {
     console.log(`Playing note ${midiNumber}...`);
-    setUserActiveNotes((useractiveNotes) => {
-      if (useractiveNotes.includes(midiNumber)) {
-        return useractiveNotes;
+    setUserActiveNotes((userActiveNotes) => {
+      if (userActiveNotes.includes(midiNumber)) {
+        return userActiveNotes;
       }
 
-      socket?.emit("midiAtarKey", midiNumber, true);
+      socket.current?.emit("midiAtarKey", midiNumber, true);
       // Use the ref because the midi player will call this function
       if (hearAudioRef.current) {
         pianoRef.current?.start(midiNumber);
       }
 
-      return useractiveNotes.concat(midiNumber);
+      return userActiveNotes.concat(midiNumber);
     });
   };
 
@@ -150,7 +150,7 @@ const MidiAtar = ({
     console.log(`Stopping note ${midiNumber}...`);
     setUserActiveNotes((useractiveNotes) => {
       if (useractiveNotes.includes(midiNumber)) {
-        socket?.emit("midiAtarKey", midiNumber, false);
+        socket.current?.emit("midiAtarKey", midiNumber, false);
         pianoRef.current?.stop(midiNumber);
       }
 
@@ -216,7 +216,7 @@ const MidiAtar = ({
     console.log("Resetting user active notes...");
     setUserActiveNotes((useractiveNotes) => {
       useractiveNotes.forEach((note) => {
-        socket?.emit("midiAtarKey", note, false);
+        socket.current?.emit("midiAtarKey", note, false);
         pianoRef.current?.stop(note);
       });
       return [];
@@ -304,7 +304,7 @@ const MidiAtar = ({
       </div>
       {/* <div class="flex flex-col items-center justify-center w-full"> */}
       <ControlledPiano
-        activeNotes={activeNotes.concat(useractiveNotes)}
+        activeNotes={activeNotes.concat(userActiveNotes)}
         onPlayNoteInput={handlePlayNoteInput}
         onStopNoteInput={handleStopNoteInput}
         noteRange={noteRange}
