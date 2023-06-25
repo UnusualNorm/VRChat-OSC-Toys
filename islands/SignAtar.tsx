@@ -25,6 +25,7 @@ interface SignAtarProps {
   predict?: boolean;
 }
 
+// TODO: Split up functions to make it easier to read
 const SignAtar = ({
   length = 8,
   values = " ABCDEFGHIJKLMNOPQRSTUVWXYZ".split(""),

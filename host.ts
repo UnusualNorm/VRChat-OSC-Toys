@@ -110,7 +110,7 @@ socket.on("signAtarI", (dial, value, blame) => {
   signAtarChannels[dial] = value;
 
   const prog = value / (signAtarValues.length - 1);
-  const msg = new Message(`/avatar/parameters/sign${dial}`);
+  const msg = new Message(`/avatar/parameters/signAtar${dial}`);
   msg.append(prog, MessageType.Float32);
 
   console.log(
