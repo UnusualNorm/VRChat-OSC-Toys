@@ -39,7 +39,7 @@ const SignAtar = ({
     );
   }
 
-  const socket = useSocket({
+  const socketRef = useSocket({
     query: {
       hostId: parseCookies(document.cookie).hostId,
       avatar: "signatar",
@@ -52,11 +52,11 @@ const SignAtar = ({
 
   useEffect(() => {
     console.log("Setting up socket...");
-    socket?.on("signAtarIDR", (idr) => {
+    socketRef.current?.on("signAtarIDR", (idr) => {
       setIndexes(idr);
     });
 
-    socket?.on("signAtarI", (dialIndex, newValue) => {
+    socketRef.current?.on("signAtarI", (dialIndex, newValue) => {
       setIndexes((indexes) =>
         indexes.map((v, i) => i === dialIndex ? newValue : v)
       );
@@ -64,10 +64,10 @@ const SignAtar = ({
 
     return () => {
       console.log("Cleaning up socket...");
-      socket?.off("signAtarIDR");
-      socket?.off("signAtarI");
+      socketRef.current?.off("signAtarIDR");
+      socketRef.current?.off("signAtarI");
     };
-  }, [socket]);
+  }, [socketRef]);
 
   const requestValueChange = (up: boolean, dialIndex: number) => {
     let newValue = up ? indexes[dialIndex] - 1 : indexes[dialIndex] + 1;
@@ -83,7 +83,7 @@ const SignAtar = ({
       newValue = 0;
     }
 
-    socket?.emit("signAtarI", dialIndex, newValue);
+    socketRef.current?.emit("signAtarI", dialIndex, newValue);
 
     // A wee bit dangerous, there's a chance the host refuses the change, and now we're desynced
     if (predict) {
@@ -108,10 +108,10 @@ const SignAtar = ({
       const index = values.indexOf(input[i]);
       if (index !== -1) {
         newIndexes[i] = index;
-        socket?.emit("signAtarI", i, index);
+        socketRef.current?.emit("signAtarI", i, index);
       } else {
         newIndexes[i] = 0;
-        socket?.emit("signAtarI", i, 0);
+        socketRef.current?.emit("signAtarI", i, 0);
       }
     }
 
