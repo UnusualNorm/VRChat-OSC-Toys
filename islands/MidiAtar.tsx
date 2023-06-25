@@ -76,6 +76,7 @@ const MidiAtar = ({
   const contextRef = useRef<AudioContext | null>(null);
   const pianoRef = useRef<SplendidGrandPiano | null>(null);
   const hearAudioRef = useRef(hearAudio);
+  const loopMidiRef = useRef(loopMidi);
 
   useEffect(() => {
     hearAudioRef.current = hearAudio;
@@ -96,6 +97,10 @@ const MidiAtar = ({
       contextRef.current?.suspend();
     };
   }, [hearAudio]);
+
+  useEffect(() => {
+    loopMidiRef.current = loopMidi;
+  }, [loopMidi]);
 
   useEffect(() => {
     console.log("Setting up socket...");
@@ -205,7 +210,7 @@ const MidiAtar = ({
     playerRef.current.on("endOfFile", () => {
       console.log("MIDI file ended!");
       stopMidi();
-      if (loopMidi) {
+      if (loopMidiRef.current) {
         startMidi();
       }
     });
