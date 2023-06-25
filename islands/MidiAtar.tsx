@@ -70,11 +70,13 @@ const MidiAtar = ({
   const [midiLoaded, setMidiLoaded] = useState(false);
   const [playingMidi, setPlayingMidi] = useState(false);
   const [hearAudio, setHearAudio] = useState(false);
+  const [loopMidi, setLoopMidi] = useState(false);
 
   const playerRef = useRef<MidiPlayer.Player>();
   const contextRef = useRef<AudioContext | null>(null);
   const pianoRef = useRef<SplendidGrandPiano | null>(null);
   const hearAudioRef = useRef(hearAudio);
+  const loopMidiRef = useRef(loopMidi);
 
   useEffect(() => {
     hearAudioRef.current = hearAudio;
@@ -95,6 +97,10 @@ const MidiAtar = ({
       contextRef.current?.suspend();
     };
   }, [hearAudio]);
+
+  useEffect(() => {
+    loopMidiRef.current = loopMidi;
+  }, [loopMidi]);
 
   useEffect(() => {
     console.log("Setting up socket...");
@@ -204,6 +210,9 @@ const MidiAtar = ({
     playerRef.current.on("endOfFile", () => {
       console.log("MIDI file ended!");
       stopMidi();
+      if (loopMidiRef.current) {
+        setTimeout(() => startMidi(), 0);
+      }
     });
 
     playerRef.current.on("fileLoaded", () => {
@@ -293,6 +302,20 @@ const MidiAtar = ({
         >
           {playingMidi ? "Stop" : "Play"}
         </Button>
+        <Input
+          type="checkbox"
+          checked={loopMidi}
+          onChange={(e) => {
+            setLoopMidi(e.currentTarget.checked);
+          }}
+        />
+        <p
+          style={{
+            paddingRight: "5px",
+          }}
+        >
+          Loop
+        </p>
         <Input
           type="checkbox"
           checked={hearAudio}
