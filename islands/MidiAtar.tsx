@@ -57,7 +57,7 @@ const MidiAtar = ({
     );
   }
 
-  const socket = useSocket({
+  const socketRef = useSocket({
     query: {
       hostId: parseCookies(document.cookie).hostId,
       avatar: "midiatar",
@@ -98,11 +98,11 @@ const MidiAtar = ({
 
   useEffect(() => {
     console.log("Setting up socket...");
-    if (!socket.current) {
+    if (!socketRef.current) {
       return;
     }
 
-    socket.current.on("midiAtarKey", (key: number, pressed: boolean) => {
+    socketRef.current.on("midiAtarKey", (key: number, pressed: boolean) => {
       setActiveNotes((activeNotes) => {
         if (pressed) {
           // Don't append note to activeNotes if it's already present
@@ -125,9 +125,9 @@ const MidiAtar = ({
 
     return () => {
       console.log("Cleaning up socket...");
-      socket.current?.off("midiAtarKey");
+      socketRef.current?.off("midiAtarKey");
     };
-  }, [socket.current]);
+  }, [socketRef.current]);
 
   const handlePlayNoteInput = (midiNumber: number) => {
     console.log(`Playing note ${midiNumber}...`);
@@ -136,7 +136,7 @@ const MidiAtar = ({
         return userActiveNotes;
       }
 
-      socket.current?.emit("midiAtarKey", midiNumber, true);
+      socketRef.current?.emit("midiAtarKey", midiNumber, true);
       // Use the ref because the midi player will call this function
       if (hearAudioRef.current) {
         pianoRef.current?.start(midiNumber);
@@ -150,7 +150,7 @@ const MidiAtar = ({
     console.log(`Stopping note ${midiNumber}...`);
     setUserActiveNotes((useractiveNotes) => {
       if (useractiveNotes.includes(midiNumber)) {
-        socket.current?.emit("midiAtarKey", midiNumber, false);
+        socketRef.current?.emit("midiAtarKey", midiNumber, false);
         pianoRef.current?.stop(midiNumber);
       }
 
@@ -216,7 +216,7 @@ const MidiAtar = ({
     console.log("Resetting user active notes...");
     setUserActiveNotes((useractiveNotes) => {
       useractiveNotes.forEach((note) => {
-        socket.current?.emit("midiAtarKey", note, false);
+        socketRef.current?.emit("midiAtarKey", note, false);
         pianoRef.current?.stop(note);
       });
       return [];
