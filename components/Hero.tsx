@@ -16,10 +16,10 @@ export default function Hero() {
 
       <div>
         <a
-          href="/avatars"
+          href="/connect"
           class="block mt-4 text-blue-500 cursor-pointer inline-flex items-center group text-blue-800 bg-white px-8 py-2 rounded-md hover:bg-blue-50 font-bold"
         >
-          Avatars{" "}
+          Connect{" "}
         </a>
         <a
           href="https://github.com/UnusualNorm/VRChat-OSC-Toys"

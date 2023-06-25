@@ -1,6 +1,5 @@
 import { Head } from "$fresh/runtime.ts";
 import Hero from "../components/Hero.tsx";
-import Carousel from "../islands/Carousel.tsx";
 
 export default function Home() {
   return (
@@ -9,7 +8,6 @@ export default function Home() {
         <title>VRC Toys - Home</title>
       </Head>
       <Hero />
-      <Carousel />
     </>
   );
 }

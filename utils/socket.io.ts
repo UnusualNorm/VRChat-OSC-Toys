@@ -20,9 +20,16 @@ export function useSocket(
   useEffect(() => {
     const socket = io(opts);
     setSocket(socket);
-    socket.once(
+    socket.on(
       "disconnect",
-      () => window.location.replace("/connect"),
+      (reason) => {
+        console.log(`Socket disconnected due to ${reason}...`);
+        if (reason === "io server disconnect") {
+          // TODO: Make this not nuke all cookies
+          document.cookie = "";
+          window.location.replace("/connect");
+        }
+      },
     );
 
     return () => {

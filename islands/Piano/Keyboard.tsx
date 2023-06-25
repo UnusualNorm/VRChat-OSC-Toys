@@ -63,7 +63,7 @@ const Keyboard = ({
   const naturalKeyWidth = getNaturalKeyWidth();
   return (
     <div
-      className={`ReactPiano__Keyboard ${className}`}
+      className={`ReactPiano__Keyboard ${className ?? ""}`}
       style={{ width: getWidth(), height: getHeight() }}
     >
       {getMidiNumbers().map((midiNumber) => {

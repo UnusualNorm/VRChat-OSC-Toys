@@ -41,7 +41,7 @@ interface MidiAtarProps {
 }
 
 const MidiAtar = ({
-  noteRange = { first: 48, last: 72 },
+  noteRange = { first: 36, last: 84 },
   renderNoteLabel,
   className,
   disabled,
@@ -67,14 +67,37 @@ const MidiAtar = ({
   // We don't need to grab an idr frame, as music notes don't last for very long
   const [activeNotes, setActiveNotes] = useState<number[]>([]);
   const [useractiveNotes, setUserActiveNotes] = useState<number[]>([]);
-  const [uploadingMidi, setUploadingMidi] = useState(false);
+  const [midiLoaded, setMidiLoaded] = useState(false);
   const [playingMidi, setPlayingMidi] = useState(false);
-  const playerRef = useRef<any>();
   const [hearAudio, setHearAudio] = useState(false);
+
+  const playerRef = useRef<MidiPlayer.Player>();
   const contextRef = useRef<AudioContext | null>(null);
   const pianoRef = useRef<SplendidGrandPiano | null>(null);
+  const hearAudioRef = useRef(hearAudio);
 
   useEffect(() => {
+    hearAudioRef.current = hearAudio;
+    if (!hearAudio) {
+      return;
+    }
+
+    console.log("Setting up audio...");
+    if (!contextRef.current) contextRef.current = new AudioContext();
+    else contextRef.current.resume();
+
+    if (!pianoRef.current) {
+      pianoRef.current = new SplendidGrandPiano(contextRef.current);
+    }
+
+    return () => {
+      console.log("Closing audio...");
+      contextRef.current?.suspend();
+    };
+  }, [hearAudio]);
+
+  useEffect(() => {
+    console.log("Setting up socket...");
     if (!socket) {
       return;
     }
@@ -87,7 +110,7 @@ const MidiAtar = ({
             return activeNotes;
           }
 
-          if (hearAudio) pianoRef.current?.start(key);
+          if (hearAudioRef.current) pianoRef.current?.start(key);
           return activeNotes.concat(key);
         } else {
           if (!activeNotes.includes(key)) {
@@ -101,23 +124,30 @@ const MidiAtar = ({
     });
 
     return () => {
+      console.log("Cleaning up socket...");
       socket.off("midiAtarKey");
     };
-  }, [socket, hearAudio]);
+  }, [socket]);
 
-  const handlePlayNoteInput = (midiNumber: number) =>
+  const handlePlayNoteInput = (midiNumber: number) => {
+    console.log(`Playing note ${midiNumber}...`);
     setUserActiveNotes((useractiveNotes) => {
-      // Don't append note to activeNotes if it's already present
       if (useractiveNotes.includes(midiNumber)) {
         return useractiveNotes;
       }
 
       socket?.emit("midiAtarKey", midiNumber, true);
-      if (hearAudio) pianoRef.current?.start(midiNumber);
+      // Use the ref because the midi player will call this function
+      if (hearAudioRef.current) {
+        pianoRef.current?.start(midiNumber);
+      }
+
       return useractiveNotes.concat(midiNumber);
     });
+  };
 
-  const handleStopNoteInput = (midiNumber: number) =>
+  const handleStopNoteInput = (midiNumber: number) => {
+    console.log(`Stopping note ${midiNumber}...`);
     setUserActiveNotes((useractiveNotes) => {
       if (useractiveNotes.includes(midiNumber)) {
         socket?.emit("midiAtarKey", midiNumber, false);
@@ -126,9 +156,10 @@ const MidiAtar = ({
 
       return useractiveNotes.filter((note) => midiNumber !== note);
     });
+  };
 
   useEffect(() => {
-    // Setup midi input
+    console.log("Setting up midi input...");
     if (!navigator.requestMIDIAccess) {
       return;
     }
@@ -149,10 +180,59 @@ const MidiAtar = ({
         };
       }
     });
-
-    contextRef.current = new AudioContext();
-    pianoRef.current = new SplendidGrandPiano(contextRef.current);
   }, []);
+
+  useEffect(() => {
+    console.log("Setting up midi player...");
+    playerRef.current = new MidiPlayer.Player(
+      (
+        event: { name: string; velocity: number; noteNumber: number },
+      ) => {
+        // Note that because of a common practice called "running status" many MIDI files may use Note on events with 0 velocity in place of Note off events.
+        if (event.name === "Note on" && event.velocity === 0) {
+          event.name = "Note off";
+        }
+
+        if (event.name === "Note on") {
+          handlePlayNoteInput(event.noteNumber);
+        } else if (event.name === "Note off") {
+          handleStopNoteInput(event.noteNumber);
+        }
+      },
+    );
+
+    playerRef.current.on("endOfFile", () => {
+      console.log("MIDI file ended!");
+      stopMidi();
+    });
+
+    playerRef.current.on("fileLoaded", () => {
+      console.log("MIDI file loaded!");
+      setMidiLoaded(true);
+    });
+  }, []);
+
+  const resetUserActiveNotes = () => {
+    console.log("Resetting user active notes...");
+    setUserActiveNotes((useractiveNotes) => {
+      useractiveNotes.forEach((note) => {
+        socket?.emit("midiAtarKey", note, false);
+        pianoRef.current?.stop(note);
+      });
+      return [];
+    });
+  };
+
+  const stopMidi = () => {
+    console.log("Stopping MIDI...");
+    playerRef.current?.stop();
+    resetUserActiveNotes();
+  };
+
+  const startMidi = () => {
+    console.log("Starting MIDI...");
+    playerRef.current?.play();
+  };
 
   return (
     <div class="flex flex-col items-center justify-center w-full max-w-md p-4">
@@ -160,55 +240,55 @@ const MidiAtar = ({
         <Input
           type="file"
           accept=".mid"
-          disabled={uploadingMidi}
+          disabled={playingMidi}
           onChange={(e) => {
-            playerRef.current?.stop();
-            if (!e.target) {
+            setMidiLoaded(false);
+            if (!e.currentTarget.files || e.currentTarget.files.length === 0) {
+              console.warn("No file selected...");
               return;
             }
 
-            setUploadingMidi(true);
+            const file = e.currentTarget.files[0];
+            console.log(`Reading ${file.name}...`);
             const reader = new FileReader();
-            reader.onload = (e) => {
-              playerRef.current = new MidiPlayer.Player(
-                (
-                  event: { name: string; velocity: number; noteNumber: number },
-                ) => {
-                  // Note that because of a common practice called "running status" many MIDI files may use Note on events with 0 velocity in place of Note off events.
-                  if (event.name === "Note on" && event.velocity === 0) {
-                    event.name = "Note off";
-                  }
+            reader.onload = () => {
+              if (!reader.result) {
+                console.error(`Failed to read ${file.name}...`);
+                return;
+              }
 
-                  if (event.name === "Note on") {
-                    handlePlayNoteInput(event.noteNumber);
-                  } else if (event.name === "Note off") {
-                    handleStopNoteInput(event.noteNumber);
-                  }
-                },
-              );
-              playerRef.current.loadArrayBuffer(reader.result as ArrayBuffer);
-              setUploadingMidi(false);
+              if (!playerRef.current) {
+                console.error(`Failed to load ${file.name}, no player...`);
+                return;
+              }
+
+              if (reader.result instanceof ArrayBuffer) {
+                console.log(
+                  `Read ${file.name} as ArrayBuffer! Loading...`,
+                );
+                playerRef.current.loadArrayBuffer(reader.result);
+              } else {
+                console.log(
+                  `Read ${file.name} as string! Loading...`,
+                );
+                const uri = "data:audio/midi;base64," + btoa(reader.result);
+                playerRef.current.loadDataUri(uri);
+              }
             };
 
-            // @ts-ignore target is not correct in the typescript definition
-            reader.readAsArrayBuffer((e.target).files[0]);
+            reader.readAsArrayBuffer(file);
           }}
         />
         <Button
           onClick={() => {
             setPlayingMidi(!playingMidi);
             if (playingMidi) {
-              playerRef.current?.stop();
-              useractiveNotes.forEach((note) => {
-                socket?.emit("midiAtarKey", note, false);
-                pianoRef.current?.stop(note);
-              });
-              setUserActiveNotes([]);
+              stopMidi();
             } else {
-              playerRef.current?.play();
+              startMidi();
             }
           }}
-          disabled={uploadingMidi}
+          disabled={!midiLoaded}
           className="m-2"
         >
           {playingMidi ? "Stop" : "Play"}
@@ -217,28 +297,27 @@ const MidiAtar = ({
           type="checkbox"
           checked={hearAudio}
           onChange={(e) => {
-            // @ts-ignore checked is not correct in the typescript definition
-            setHearAudio(!!e.target?.checked);
+            setHearAudio(e.currentTarget.checked);
           }}
         />
-        <p>Hear Audio</p>
+        <p>Listen</p>
       </div>
-      <div class="flex flex-row items-center justify-center w-full">
-        <ControlledPiano
-          activeNotes={activeNotes.concat(useractiveNotes)}
-          onPlayNoteInput={handlePlayNoteInput}
-          onStopNoteInput={handleStopNoteInput}
-          noteRange={noteRange}
-          playNote={() => {}}
-          stopNote={() => {}}
-          renderNoteLabel={renderNoteLabel}
-          className={className}
-          disabled={disabled}
-          width={width}
-          keyWidthToHeight={keyWidthToHeight}
-          keyboardShortcuts={keyboardShortcuts}
-        />
-      </div>
+      {/* <div class="flex flex-col items-center justify-center w-full"> */}
+      <ControlledPiano
+        activeNotes={activeNotes.concat(useractiveNotes)}
+        onPlayNoteInput={handlePlayNoteInput}
+        onStopNoteInput={handleStopNoteInput}
+        noteRange={noteRange}
+        playNote={() => {}}
+        stopNote={() => {}}
+        renderNoteLabel={renderNoteLabel}
+        className={className}
+        disabled={disabled}
+        width={width}
+        keyWidthToHeight={keyWidthToHeight}
+        keyboardShortcuts={keyboardShortcuts}
+      />
+      {/* </div> */}
     </div>
   );
 };

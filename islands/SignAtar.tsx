@@ -50,6 +50,7 @@ const SignAtar = ({
   );
 
   useEffect(() => {
+    console.log("Setting up socket...");
     socket?.on("signAtarIDR", (idr) => {
       setIndexes(idr);
     });
@@ -59,10 +60,21 @@ const SignAtar = ({
         indexes.map((v, i) => i === dialIndex ? newValue : v)
       );
     });
+
+    return () => {
+      console.log("Cleaning up socket...");
+      socket?.off("signAtarIDR");
+      socket?.off("signAtarI");
+    };
   }, [socket]);
 
   const requestValueChange = (up: boolean, dialIndex: number) => {
     let newValue = up ? indexes[dialIndex] - 1 : indexes[dialIndex] + 1;
+    console.log(
+      `Requesting value change from ${values[indexes[dialIndex]]} to ${
+        values[newValue]
+      }...`,
+    );
 
     if (newValue < 0) {
       newValue = values.length - 1;
@@ -81,6 +93,13 @@ const SignAtar = ({
   const applyInput = (
     e: JSX.TargetedEvent<HTMLInputElement, Event>,
   ) => {
+    // If the input isn't currently active, don't do anything
+    if (e.currentTarget !== document.activeElement) {
+      console.log("Not submitting input, input not active...");
+      return;
+    }
+
+    console.log("Submitting input...");
     const input = e.currentTarget.value.toUpperCase();
     const newIndexes = Array(length).fill(0);
 
@@ -102,21 +121,25 @@ const SignAtar = ({
   };
 
   return (
-    <div className="flex flex-row justify-center">
+    <div className="flex flex-col items-center">
+      <div className="flex flex-row justify-center">
+        {indexes.map((index, dialIndex) => (
+          <ControlledDial
+            key={dialIndex}
+            value={values[index]}
+            changeValue={(up) => requestValueChange(up, dialIndex)}
+          />
+        ))}
+      </div>
       <Input
         placeholder="Text"
-        value={indexes.map((index) => values[index]).join("").trimEnd()
-          .toLowerCase()}
+        value={indexes.map((index) => values[index]).join("").trimEnd()}
         onChange={applyInput}
+        onInput={(e) => {
+          e.currentTarget.value = e.currentTarget.value.toUpperCase();
+          e.currentTarget.value = e.currentTarget.value.substring(0, length);
+        }}
       />
-      {indexes.map((index, dialIndex) => (
-        // TODO: Transition to ControlledDial
-        <ControlledDial
-          key={dialIndex}
-          value={values[index]}
-          changeValue={(up) => requestValueChange(up, dialIndex)}
-        />
-      ))}
     </div>
   );
 };
